@@ -1,0 +1,57 @@
+---
+title: "assignment_2"
+author: "Stepan Kropachev"
+date: "2025-01-02"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, echo=FALSE}
+data <- read.csv("pollutants_22.csv")
+```
+
+## The Task
+
+Consider the data set pollutants_22.csv.
+
+Using suitable statistical hypotheses tests, check if the three types of pollutants seem to have **significant differences in the means**, with respect to the location of the station (city center/suburbs) and with respect to the year (2000/2020). 
+
+Write a short report with the results and with your comments.
+
+## The results
+
+First, let's test the data for normality using the Shapiro test.
+
+```{r, echo=FALSE}
+shapiro.test(data$PM10)
+shapiro.test(data$Ozone)
+shapiro.test(data$NO2)
+```
+As we see, all the variables are normally distributed. And we can apply test for investigating whether the three types of pollutants seems to have significant difference in the means. For this purpose we can use:
+
+- T-test to analyse the pollutants separately (but there's a high risk of Type 1 error);
+- MANOVA and ANOVA for multivariate analysis;
+
+Since the data is distibuted normally, let's apply the MANOVA test.
+```{r, echo=FALSE}
+data$year_group <- ifelse(data$year == 2000, "2000", "2020")
+
+model <- manova(cbind(PM10, Ozone, NO2) ~ center + year_group, data=data)
+manova_result <- summary(model, test="Wilks")
+
+manova_result
+```
+Here we see, that there's no significant multivariate effect of location on the combined pollutant levels. There's no significant multivariate effect of year on the combined pollutant levels, either.
+
+Let's apply the ANOVA to investigate the variables individually.
+```{r, echo=FALSE}
+summary.aov(model)
+```
+The analysis of three pollutants (**PM10**, **Ozone**, and **NO2**) across different locations and years reveals that when considered together through MANOVA, there are no significant multivariate effects of either location or year.
+
+Follow-up univariate ANOVAs show that only **NO2** exhibits a significant difference between city center and suburbs. Neither **PM10** nor **Ozone** show significant differences across locations or years. This suggests that while most pollutant levels remain consistent across space and time, **NO2** concentrations vary significantly depending on the location of measurement.
